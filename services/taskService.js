@@ -127,8 +127,7 @@ exports.deleteTaskById = async (req, res, next) => {
 }
 const verifyTaskEdior = (assignedto, userID, role) => {
     try {
-        console.log(assignedto, userID, role);
-        if (assignedto === userID || role === 'admin') {
+        if (String(assignedto) === String(userID) || role === 'admin') {
             return true;
         } else {
             return false;
