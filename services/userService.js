@@ -2,6 +2,7 @@ const { token } = require('morgan');
 const pool = require('../db/pool');
 const encrypt = require('../utils/encrypt')
 const err = require('../utils/errorHandle');
+require('dotenv').config({ path: './config.env' });
 
 exports.signup = async (req, res, next) => {
     try {
@@ -42,9 +43,10 @@ exports.login = async (req, res, next) => {
                     role: result.rows[0].role
                 });
                 return res.status(200).cookie('jwt', token, {
-                    expires: new Date(Date.now() + encrypt.expireTime * 1000),
-                    secure: true,
-                    httpOnly: true
+                    expires: new Date(Date.now() + encrypt.expireTime * 1000), // ใช้เวลาหมดอายุจาก encrypt.expireTime
+                    secure: process.env.NODE_ENV, // ใช้ secure cookie เมื่ออยู่ใน environment production
+                    httpOnly: true, // ทำให้ cookie ไม่สามารถเข้าถึงจาก JavaScript
+                    sameSite: 'Strict' // ใช้ sameSite: 'Strict' เพื่อป้องกัน CSRF attacks
                 }).json({
                     status: 'Success',
                     message: 'Login success'
@@ -94,16 +96,17 @@ exports.verifyToken = async (req, res, next) => {
     if (token) {
         try {
             const data = await encrypt.verifyToken(token);
-            req.user = {}
-            req.user.id = data.id;
-            req.user.role = data.role;
+            req.user = {
+                id: data.id,  // กำหนด id ของผู้ใช้
+                role: data.role // กำหนด role ของผู้ใช้
+            };
         } catch (error) {
             return err.mapError(400, 'Verify token fail', next);
         }
+        next();
     } else {
         return err.mapError(401, 'Invalid token', next);
     }
-    next();
 }
 exports.verifyPermissionAdmin = (req, res, next) => {
     if (req.user.role !== 'admin') {
