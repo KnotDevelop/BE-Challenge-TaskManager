@@ -66,7 +66,7 @@ exports.modifyTaskById = async (req, res, next) => {
             return err.mapError(400, 'Task not found', next);
         }
         if (!verifyTaskEdior(resultFindTask.rows[0].assignedto, req.user.id, req.user.role)) {
-            return err.mapError(401, `Invalid Permission ${resultFindTask.rows[0].assignedto} ${req.user.id} ${req.user.role}`, next);
+            return err.mapError(401, 'Invalid Permission', next);
         }
         let title = resultFindTask.rows[0].title;
         let description = resultFindTask.rows[0].description;
